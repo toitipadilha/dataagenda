@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block title %}Consultas — DentaAgenda{% endblock %}
+{% block content %}
+<div class="section-head">
+  <h2>Consultas</h2>
+  <button class="btn btn-primary" onclick="document.getElementById('ov-nova-c').classList.add('open')">＋ Agendar</button>
+</div>
+
+<!-- filtro data -->
+<form method="GET" style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+  <input type="date" name="data" value="{{ data_filtro or '' }}"
+    style="border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none">
+  <button type="submit" class="btn btn-secondary btn-sm">Filtrar</button>
+  {% if data_filtro %}<a href="{{ url_for('consultas') }}" class="btn btn-secondary btn-sm">Limpar</a>{% endif %}
+</form>
+
+{% if not consultas %}
+<div class="empty"><p>Nenhuma consulta encontrada.</p>
+  <button class="btn btn-primary" onclick="document.getElementById('ov-nova-c').classList.add('open')">＋ Agendar</button>
+</div>
+{% else %}
+{% set ns = namespace(last_date='') %}
+{% for c in consultas %}
+{% if c.data.isoformat() != ns.last_date %}
+{% set ns.last_date = c.data.isoformat() %}
+<div style="font-size:.76rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 6px">
+  {{ c.data.strftime('%d/%m/%Y') }}
+</div>
+{% endif %}
+<div class="card">
+  <div class="card-info">
+    <div class="card-name">{{ c.paciente.nome }}</div>
+    <div class="card-sub">{{ c.hora }} · {{ c.procedimento or '—' }}
+      <span class="badge badge-{{ c.status }}">{{ c.status.replace('_',' ') }}</span>
+    </div>
+  </div>
+  <div class="card-actions">
+    {% if c.paciente.telefone %}
+    <a class="btn btn-wa btn-sm" href="{{ wa_link(c.paciente.telefone, build_wa_msg(c.paciente, c)) }}" target="_blank">💬</a>
+    {% endif %}
+    <button class="btn btn-secondary btn-sm" onclick="openDetalheC({{ c.id }})">Ver</button>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- Modal: Nova Consulta -->
+<div class="overlay" id="ov-nova-c">
+  <div class="modal">
+    <h3>Nova Consulta</h3>
+    <form method="POST" action="{{ url_for('nova_consulta') }}">
+      <div class="form-group">
+        <label>Paciente</label>
+        <select name="paciente_id" required>
+          <option value="">Selecione...</option>
+          {% for p in pacientes %}
+          <option value="{{ p.id }}">{{ p.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Data</label><input type="date" name="data" required></div>
+        <div class="form-group"><label>Horário</label><input type="time" name="hora" step="1800" required></div>
+      </div>
+      <div class="form-group"><label>Procedimento</label><input type="text" name="procedimento" placeholder="Ex: Limpeza..."></div>
+      <div class="form-group">
+        <label>Status</label>
+        <select name="status">
+          <option value="pendente">Pendente</option>
+          <option value="confirmado">Confirmado</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Obs</label><textarea name="obs"></textarea></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('ov-nova-c').classList.remove('open')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Detalhe -->
+<div class="overlay" id="ov-detalhe-c">
+  <div class="modal">
+    <h3>Consulta</h3>
+    <div id="dc-body" style="display:grid;gap:10px;margin-bottom:14px"></div>
+    <div id="dc-status-btns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('ov-detalhe-c').classList.remove('open')">Fechar</button>
+      <a class="btn btn-wa" id="dc-wa" href="#" target="_blank">💬 WhatsApp</a>
+      <button class="btn btn-primary" id="dc-editar">✏️ Editar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Editar -->
+<div class="overlay" id="ov-editar-c">
+  <div class="modal">
+    <h3>Editar Consulta</h3>
+    <form method="POST" id="form-editar-c">
+      <div class="form-group">
+        <label>Paciente</label>
+        <select name="paciente_id" id="ec-pac">
+          {% for p in pacientes %}
+          <option value="{{ p.id }}">{{ p.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Data</label><input type="date" name="data" id="ec-data"></div>
+        <div class="form-group"><label>Horário</label><input type="time" name="hora" id="ec-hora" step="1800"></div>
+      </div>
+      <div class="form-group"><label>Procedimento</label><input type="text" name="procedimento" id="ec-proc"></div>
+      <div class="form-group">
+        <label>Status</label>
+        <select name="status" id="ec-status">
+          <option value="pendente">Pendente</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="em_atendimento">Em atendimento</option>
+          <option value="finalizado">Finalizado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Obs</label><textarea name="obs" id="ec-obs"></textarea></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger btn-sm" id="ec-del">Excluir</button>
+        <div style="flex:1"></div>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('ov-editar-c').classList.remove('open')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const statusLabels = {pendente:'Pendente',confirmado:'Confirmado',em_atendimento:'Em atendimento',finalizado:'Finalizado',cancelado:'Cancelado'};
+
+async function openDetalheC(id) {
+  const r = await fetch(`/api/consulta/${id}`);
+  const d = await r.json();
+  const [y,m,di] = d.data.split('-');
+  document.getElementById('dc-body').innerHTML = `
+    <div><span style="font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Paciente</span><div style="font-weight:600;margin-top:2px">${d.paciente}</div></div>
+    <div><span style="font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Data & Hora</span><div style="font-weight:600;margin-top:2px">${di}/${m}/${y} às ${d.hora}</div></div>
+    <div><span style="font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Procedimento</span><div style="margin-top:2px">${d.procedimento||'—'}</div></div>
+    <div><span style="font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Status</span><div style="margin-top:4px"><span class="badge badge-${d.status}">${statusLabels[d.status]||d.status}</span></div></div>
+    ${d.obs?`<div><span style="font-size:.74rem;color:var(--muted)">Obs</span><div style="margin-top:2px">${d.obs}</div></div>`:''}
+  `;
+  const statuses = [['confirmado','✓ Confirmado'],['em_atendimento','🟦 Atendendo'],['finalizado','✅ Finalizado'],['cancelado','✗ Cancelar']];
+  document.getElementById('dc-status-btns').innerHTML = statuses
+    .filter(s=>s[0]!==d.status)
+    .map(s=>`<button class="btn btn-secondary btn-sm" onclick="mudarStatusC(${id},'${s[0]}')">${s[1]}</button>`)
+    .join('');
+  document.getElementById('dc-wa').href = d.wa_link||'#';
+  document.getElementById('dc-wa').style.display = d.wa_link?'':'none';
+  document.getElementById('dc-editar').onclick = ()=>openEditarC(d);
+  document.getElementById('ov-detalhe-c').classList.add('open');
+}
+
+function openEditarC(d) {
+  document.getElementById('form-editar-c').action = `/consultas/${d.id}/editar`;
+  document.getElementById('ec-pac').value    = d.paciente_id;
+  document.getElementById('ec-data').value   = d.data;
+  document.getElementById('ec-hora').value   = d.hora;
+  document.getElementById('ec-proc').value   = d.procedimento;
+  document.getElementById('ec-status').value = d.status;
+  document.getElementById('ec-obs').value    = d.obs;
+  document.getElementById('ec-del').onclick  = ()=>{ if(confirm('Excluir?')) fetch(`/consultas/${d.id}/excluir`,{method:'POST'}).then(()=>location.reload()); };
+  document.getElementById('ov-detalhe-c').classList.remove('open');
+  document.getElementById('ov-editar-c').classList.add('open');
+}
+
+async function mudarStatusC(id, status) {
+  const fd = new FormData(); fd.append('status', status);
+  await fetch(`/consultas/${id}/status`,{method:'POST',body:fd});
+  document.getElementById('ov-detalhe-c').classList.remove('open');
+  location.reload();
+}
+</script>
+{% endblock %}

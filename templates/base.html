@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}DentaAgenda{% endblock %}</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
+:root {
+  --teal:#2A7D6F; --teal-dk:#1D5C52; --mint:#D6F0EA;
+  --cream:#F9F7F4; --ink:#1A1A1A; --muted:#6B7280;
+  --border:#E5E7EB; --white:#FFFFFF;
+  --red:#EF4444; --gold:#F59E0B; --green:#10B981;
+  --radius:12px; --shadow:0 2px 12px rgba(0,0,0,0.07);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh}
+a{color:inherit;text-decoration:none}
+
+/* HEADER */
+header{background:var(--white);border-bottom:1px solid var(--border);height:60px;display:flex;align-items:center;padding:0 20px;gap:16px;position:sticky;top:0;z-index:100}
+.logo{font-family:'DM Serif Display',serif;font-size:1.2rem;color:var(--teal);white-space:nowrap}
+.logo span{margin-right:6px}
+nav.main{display:flex;gap:4px;flex:1;overflow-x:auto}
+.nav-link{padding:7px 14px;border-radius:8px;font-size:0.88rem;font-weight:500;color:var(--muted);white-space:nowrap;transition:all .15s}
+.nav-link:hover{background:var(--mint);color:var(--teal-dk)}
+.nav-link.active{background:var(--mint);color:var(--teal-dk);font-weight:600}
+.user-info{font-size:0.8rem;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:10px}
+.user-info a{color:var(--red);font-weight:500;font-size:0.8rem}
+
+/* MAIN */
+main{max-width:960px;margin:0 auto;padding:20px}
+
+/* FLASH */
+.flash{padding:10px 16px;border-radius:8px;margin-bottom:16px;font-size:.88rem;font-weight:500}
+.flash.ok  {background:#D1FAE5;color:#065F46}
+.flash.erro{background:#FEE2E2;color:#991B1B}
+
+/* BOTÕES */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--teal);color:#fff}.btn-primary:hover{background:var(--teal-dk)}
+.btn-secondary{background:var(--white);color:var(--teal);border:1px solid var(--teal)}.btn-secondary:hover{background:var(--mint)}
+.btn-danger{background:#FEF2F2;color:var(--red);border:1px solid #FECACA}.btn-danger:hover{background:#FEE2E2}
+.btn-wa{background:#25D366;color:#fff}.btn-wa:hover{background:#1EB854}
+.btn-sm{padding:6px 12px;font-size:.8rem}
+
+/* CARDS */
+.card{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:10px;display:flex;align-items:center;gap:12px}
+.card-info{flex:1;min-width:0}
+.card-name{font-weight:600;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-sub{font-size:.8rem;color:var(--muted);margin-top:2px}
+.card-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.badge-pendente    {background:#FEF3C7;color:#92400E}
+.badge-confirmado  {background:var(--mint);color:var(--teal-dk)}
+.badge-em_atendimento{background:#DBEAFE;color:#1E40AF}
+.badge-finalizado  {background:#F3F4F6;color:var(--muted)}
+.badge-cancelado   {background:#F3F4F6;color:var(--muted)}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:16px}
+.overlay.open{display:flex}
+.modal{background:var(--white);border-radius:var(--radius);padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h3{font-family:'DM Serif Display',serif;font-size:1.15rem;color:var(--teal-dk);margin-bottom:18px}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap}
+
+/* FORM */
+.form-group{margin-bottom:13px}
+.form-group label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.form-group input,.form-group select,.form-group textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;background:var(--white);color:var(--ink)}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--teal)}
+.form-group textarea{resize:vertical;min-height:65px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* AGENDA SEMANA */
+.week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.week-nav h2{font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--teal-dk)}
+.week-grid{display:grid;grid-template-columns:50px repeat(6,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.wg-header{background:var(--teal);color:#fff;text-align:center;padding:9px 3px;font-size:.72rem;font-weight:600}
+.wg-header.hoje{background:var(--teal-dk)}
+.wg-time{background:var(--white);color:var(--muted);font-size:.68rem;text-align:right;padding:5px 5px 0 0;height:46px}
+.wg-cell{background:var(--white);height:46px;position:relative;cursor:pointer;transition:background .1s}
+.wg-cell:hover{background:var(--mint)}
+.wg-cell.hoje{background:#F0FBF8}
+.wg-cell.bloqueado{background:#F9FAFB;cursor:not-allowed}
+.wg-appt{position:absolute;inset:2px;border-radius:6px;padding:2px 6px;font-size:.7rem;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;z-index:2;display:flex;align-items:center}
+.wg-appt.pendente    {background:var(--gold);color:#1A1A1A}
+.wg-appt.confirmado  {background:var(--teal);color:#fff}
+.wg-appt.em_atendimento{background:#3B82F6;color:#fff}
+.wg-appt.finalizado  {background:#D1D5DB;color:#6B7280}
+.wg-appt.cancelado   {background:#E5E7EB;color:#9CA3AF;text-decoration:line-through}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty p{margin-bottom:14px;font-size:.9rem}
+
+/* TOAST */
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--teal-dk);color:#fff;padding:11px 22px;border-radius:50px;font-size:.86rem;font-weight:500;z-index:999;transition:transform .3s;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* SECTION TITLE */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.section-head h2{font-family:'DM Serif Display',serif;font-size:1.15rem;color:var(--teal-dk)}
+
+/* SEARCH */
+.search-bar{display:flex;gap:8px;margin-bottom:14px}
+.search-bar input{flex:1;border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none}
+.search-bar input:focus{border-color:var(--teal)}
+
+/* LEGENDA */
+.legend{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:.76rem;color:var(--muted)}
+.legend-dot{width:9px;height:9px;border-radius:50%}
+
+@media(max-width:600px){
+  main{padding:12px}
+  .week-grid{grid-template-columns:36px repeat(6,1fr)}
+  .wg-header{padding:7px 1px;font-size:.6rem}
+  .form-row{grid-template-columns:1fr}
+  .card-actions{flex-direction:column}
+  .modal{padding:16px}
+  nav.main .nav-link{padding:6px 10px;font-size:.82rem}
+}
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<header>
+  <div class="logo"><span>🦷</span>DentaAgenda</div>
+  <nav class="main">
+    <a class="nav-link {% if request.endpoint=='agenda_semana' %}active{% endif %}" href="{{ url_for('agenda_semana') }}">📅 Agenda</a>
+    <a class="nav-link {% if request.endpoint=='consultas' %}active{% endif %}" href="{{ url_for('consultas') }}">📋 Consultas</a>
+    <a class="nav-link {% if request.endpoint=='pacientes' %}active{% endif %}" href="{{ url_for('pacientes') }}">👤 Pacientes</a>
+    <a class="nav-link" href="{{ url_for('tv', slug=current_user.clinica.slug) }}" target="_blank">📺 TV</a>
+  </nav>
+  <div class="user-info">
+    <span>{{ current_user.nome.split()[0] }}</span>
+    <a href="{{ url_for('logout') }}">Sair</a>
+  </div>
+</header>
+
+<main>
+{% with msgs = get_flashed_messages(with_categories=True) %}
+  {% for cat, msg in msgs %}
+    <div class="flash {{ cat }}">{{ msg }}</div>
+  {% endfor %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+</main>
+
+<div id="toast"></div>
+
+<script>
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓ ' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+// fechar overlays clicando fora
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

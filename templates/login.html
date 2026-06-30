@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Login — DentaAgenda</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#F9F7F4;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
+.box{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.09)}
+.logo{text-align:center;font-family:'DM Serif Display',serif;font-size:1.6rem;color:#2A7D6F;margin-bottom:6px}
+.sub{text-align:center;font-size:.85rem;color:#6B7280;margin-bottom:28px}
+label{display:block;font-size:.78rem;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;margin-top:14px}
+input{width:100%;border:1px solid #E5E7EB;border-radius:8px;padding:10px 13px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;color:#1A1A1A}
+input:focus{border-color:#2A7D6F}
+button{width:100%;margin-top:22px;background:#2A7D6F;color:#fff;border:none;border-radius:8px;padding:12px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;transition:background .15s}
+button:hover{background:#1D5C52}
+.flash{margin-bottom:16px;padding:10px 14px;border-radius:8px;font-size:.85rem;font-weight:500;background:#FEE2E2;color:#991B1B}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">🦷 DentaAgenda</div>
+  <div class="sub">Sistema de agendamento odontológico</div>
+  {% with msgs = get_flashed_messages(with_categories=True) %}
+    {% for cat, msg in msgs %}<div class="flash">{{ msg }}</div>{% endfor %}
+  {% endwith %}
+  <form method="POST">
+    <label>E-mail</label>
+    <input type="email" name="email" required autofocus placeholder="seu@email.com">
+    <label>Senha</label>
+    <input type="password" name="senha" required placeholder="••••••••">
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+</body>
+</html>

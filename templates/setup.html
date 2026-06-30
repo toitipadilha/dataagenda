@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Configuração Inicial — DentaAgenda</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:#F9F7F4;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
+.box{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:420px;box-shadow:0 4px 24px rgba(0,0,0,.09)}
+h1{font-family:'DM Serif Display',serif;color:#2A7D6F;font-size:1.4rem;margin-bottom:4px;text-align:center}
+.sub{text-align:center;color:#6B7280;font-size:.83rem;margin-bottom:24px}
+.section-title{font-size:.78rem;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid #E5E7EB}
+label{display:block;font-size:.78rem;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;margin-top:12px}
+input{width:100%;border:1px solid #E5E7EB;border-radius:8px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none}
+input:focus{border-color:#2A7D6F}
+small{color:#9CA3AF;font-size:.76rem}
+button{width:100%;margin-top:22px;background:#2A7D6F;color:#fff;border:none;border-radius:8px;padding:12px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer}
+button:hover{background:#1D5C52}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>🦷 DentaAgenda</h1>
+  <div class="sub">Configure seu sistema agora</div>
+  <form method="POST">
+    <div class="section-title">Dados da Clínica</div>
+    <label>Nome da clínica / consultório</label>
+    <input type="text" name="nome_clinica" required placeholder="Ex: Dra. Ana Lima Odontologia">
+    <label>Slug (URL da TV)</label>
+    <input type="text" name="slug" required placeholder="ex: dra-ana-lima" pattern="[a-z0-9\-]+">
+    <small>Use letras minúsculas e hífens. URL da TV: /tv/seu-slug</small>
+    <label>Telefone da clínica</label>
+    <input type="tel" name="telefone" placeholder="35 9 9999-9999">
+
+    <div class="section-title">Usuário Administrador</div>
+    <label>Seu nome</label>
+    <input type="text" name="nome_usuario" required placeholder="Dra. Ana Lima">
+    <label>E-mail de acesso</label>
+    <input type="email" name="email" required placeholder="ana@email.com">
+    <label>Senha</label>
+    <input type="password" name="senha" required minlength="6" placeholder="Mínimo 6 caracteres">
+
+    <button type="submit">Criar sistema →</button>
+  </form>
+</div>
+</body>
+</html>

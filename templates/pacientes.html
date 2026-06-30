@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}Pacientes — DentaAgenda{% endblock %}
+{% block content %}
+<div class="section-head">
+  <h2>Pacientes</h2>
+  <button class="btn btn-primary" onclick="document.getElementById('ov-novo-p').classList.add('open')">＋ Paciente</button>
+</div>
+
+<form method="GET" class="search-bar">
+  <input type="text" name="q" value="{{ q }}" placeholder="🔍 Buscar por nome...">
+  <button type="submit" class="btn btn-secondary btn-sm">Buscar</button>
+  {% if q %}<a href="{{ url_for('pacientes') }}" class="btn btn-secondary btn-sm">Limpar</a>{% endif %}
+</form>
+
+{% if not pacientes %}
+<div class="empty"><p>Nenhum paciente encontrado.</p>
+  <button class="btn btn-primary" onclick="document.getElementById('ov-novo-p').classList.add('open')">＋ Cadastrar</button>
+</div>
+{% else %}
+{% for p in pacientes %}
+<div class="card">
+  <div class="card-info">
+    <div class="card-name">{{ p.nome }}</div>
+    <div class="card-sub">
+      {{ p.telefone or '—' }}
+      {% if p.nascimento %} · {{ p.nascimento.strftime('%d/%m/%Y') }}{% endif %}
+      · {{ p.consultas|length }} consulta(s)
+    </div>
+  </div>
+  <div class="card-actions">
+    {% if p.telefone %}
+    <a class="btn btn-wa btn-sm" href="https://wa.me/55{{ p.telefone|replace(' ','')|replace('-','')|replace('(','')|replace(')','') }}" target="_blank">💬</a>
+    {% endif %}
+    <button class="btn btn-secondary btn-sm" onclick="openEditarP({{ p.id }})">Editar</button>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- Modal: Novo Paciente -->
+<div class="overlay" id="ov-novo-p">
+  <div class="modal">
+    <h3>Novo Paciente</h3>
+    <form method="POST" action="{{ url_for('novo_paciente') }}">
+      <div class="form-group"><label>Nome completo</label><input type="text" name="nome" required placeholder="Nome do paciente"></div>
+      <div class="form-row">
+        <div class="form-group"><label>WhatsApp</label><input type="tel" name="telefone" placeholder="35 9 9999-9999"></div>
+        <div class="form-group"><label>Nascimento</label><input type="date" name="nascimento"></div>
+      </div>
+      <div class="form-group"><label>Obs / Alergias</label><textarea name="obs" placeholder="Alergias, condições especiais..."></textarea></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('ov-novo-p').classList.remove('open')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Editar Paciente -->
+<div class="overlay" id="ov-editar-p">
+  <div class="modal">
+    <h3>Editar Paciente</h3>
+    <form method="POST" id="form-editar-p">
+      <div class="form-group"><label>Nome completo</label><input type="text" name="nome" id="ep-nome" required></div>
+      <div class="form-row">
+        <div class="form-group"><label>WhatsApp</label><input type="tel" name="telefone" id="ep-tel"></div>
+        <div class="form-group"><label>Nascimento</label><input type="date" name="nascimento" id="ep-nasc"></div>
+      </div>
+      <div class="form-group"><label>Obs / Alergias</label><textarea name="obs" id="ep-obs"></textarea></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger btn-sm" id="ep-del">Excluir</button>
+        <div style="flex:1"></div>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('ov-editar-p').classList.remove('open')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function openEditarP(id) {
+  const r = await fetch(`/api/paciente/${id}`);
+  const p = await r.json();
+  document.getElementById('form-editar-p').action = `/pacientes/${id}/editar`;
+  document.getElementById('ep-nome').value = p.nome;
+  document.getElementById('ep-tel').value  = p.telefone;
+  document.getElementById('ep-nasc').value = p.nascimento;
+  document.getElementById('ep-obs').value  = p.obs;
+  document.getElementById('ep-del').onclick = () => {
+    if(confirm(`Excluir ${p.nome}? As consultas também serão excluídas.`)) {
+      fetch(`/pacientes/${id}/excluir`,{method:'POST'}).then(()=>location.reload());
+    }
+  };
+  document.getElementById('ov-editar-p').classList.add('open');
+}
+</script>
+{% endblock %}

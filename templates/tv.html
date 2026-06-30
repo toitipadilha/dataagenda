@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{{ clinica.nome }} — Sala de Espera</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;600&family=DM+Serif+Display&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0F2027;color:#fff;font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+
+header{background:#1D5C52;padding:24px 40px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'DM Serif Display',serif;font-size:2rem;color:#D6F0EA;display:flex;align-items:center;gap:12px}
+.clinic-name{font-size:1.1rem;color:#A7D9D0;margin-top:4px}
+.clock{text-align:right}
+.clock .time{font-size:2.8rem;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
+.clock .date{font-size:.9rem;color:#A7D9D0;margin-top:2px}
+
+main{flex:1;padding:32px 40px;display:flex;gap:32px}
+
+/* COLUNA ESQUERDA - FILA */
+.col-fila{flex:1}
+.col-title{font-size:.8rem;font-weight:600;color:#6B8F8A;text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px}
+.fila-item{display:flex;align-items:center;gap:16px;padding:18px 22px;border-radius:12px;margin-bottom:10px;transition:all .3s}
+.fila-item.aguardando{background:#1A3A35;border-left:4px solid #2A7D6F}
+.fila-item.confirmado{background:#1A3A35;border-left:4px solid #2A7D6F}
+.fila-item.em_atendimento{background:#1A2A50;border-left:4px solid #3B82F6;animation:pulse 2s infinite}
+.fila-item.finalizado{background:#111;border-left:4px solid #374151;opacity:.5}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+
+.fila-nome{font-size:1.5rem;font-weight:600;flex:1}
+.fila-hora{font-size:1rem;color:#9CA3AF;margin-right:8px}
+.fila-status{font-size:.78rem;font-weight:700;padding:4px 12px;border-radius:20px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.status-aguardando{background:rgba(42,125,111,.2);color:#6EE7D4}
+.status-confirmado{background:rgba(42,125,111,.2);color:#6EE7D4}
+.status-em_atendimento{background:rgba(59,130,246,.2);color:#93C5FD}
+.status-finalizado{background:rgba(55,65,81,.3);color:#6B7280}
+
+/* COLUNA DIREITA - INFO */
+.col-info{width:280px;display:flex;flex-direction:column;gap:20px}
+.info-card{background:#1A1A2E;border-radius:12px;padding:20px}
+.info-card .label{font-size:.75rem;color:#6B8F8A;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.info-card .value{font-size:1.1rem;font-weight:500}
+
+/* MENSAGEM PADRÃO */
+.msg-boas-vindas{text-align:center;padding:60px 40px;color:#4B7A72}
+.msg-boas-vindas .icon{font-size:4rem;margin-bottom:16px}
+.msg-boas-vindas h2{font-family:'DM Serif Display',serif;font-size:1.6rem;margin-bottom:8px}
+
+footer{background:#0A1A18;padding:14px 40px;display:flex;align-items:center;justify-content:space-between;font-size:.78rem;color:#4B7A72}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">🦷 {{ clinica.nome }}</div>
+  </div>
+  <div class="clock">
+    <div class="time" id="clock">--:--</div>
+    <div class="date" id="date-label"></div>
+  </div>
+</header>
+
+<main>
+  <div class="col-fila">
+    <div class="col-title">📋 Pacientes do dia</div>
+    <div id="fila-lista">
+      {% if not consultas %}
+      <div class="msg-boas-vindas">
+        <div class="icon">🦷</div>
+        <h2>Bem-vindo!</h2>
+        <p>Nenhum agendamento por enquanto.</p>
+      </div>
+      {% else %}
+      {% for c in consultas %}
+      <div class="fila-item {{ c.status }}" id="item-{{ c.id }}">
+        <span class="fila-hora">{{ c.hora }}</span>
+        <span class="fila-nome">{{ c.paciente.nome.split()[0] }} {{ c.paciente.nome.split()[-1] if c.paciente.nome.split()|length > 1 else '' }}</span>
+        {% if c.status == 'em_atendimento' %}
+        <span class="fila-status status-em_atendimento">Em atendimento</span>
+        {% elif c.status == 'finalizado' %}
+        <span class="fila-status status-finalizado">Finalizado</span>
+        {% elif c.status == 'confirmado' %}
+        <span class="fila-status status-confirmado">Aguardando</span>
+        {% else %}
+        <span class="fila-status status-aguardando">Aguardando</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-info">
+    <div class="info-card">
+      <div class="label">Em atendimento</div>
+      <div class="value" id="em-atendimento-nome" style="color:#93C5FD;font-size:1.3rem">
+        {% set em_atend = consultas|selectattr('status','eq','em_atendimento')|list %}
+        {% if em_atend %}{{ em_atend[0].paciente.nome.split()[0] }}{% else %}—{% endif %}
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="label">Próximo</div>
+      <div class="value" id="proximo-nome" style="color:#6EE7D4">
+        {% set aguardando = consultas|selectattr('status','in',['pendente','confirmado'])|list %}
+        {% if aguardando %}{{ aguardando[0].paciente.nome.split()[0] }} — {{ aguardando[0].hora }}{% else %}—{% endif %}
+      </div>
+    </div>
+    <div class="info-card">
+      <div class="label">Total hoje</div>
+      <div class="value" style="font-size:2rem;font-weight:600;color:#fff">{{ consultas|length }}</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>🦷 DentaAgenda</span>
+  <span>Atualiza automaticamente a cada 30s</span>
+</footer>
+
+<script>
+// Relógio
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('date-label').textContent =
+    now.toLocaleDateString('pt-BR', {weekday:'long', day:'numeric', month:'long'});
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// Auto-refresh dados a cada 30s
+async function refreshFila() {
+  try {
+    const r = await fetch('/api/tv/{{ clinica.slug }}');
+    const data = await r.json();
+    // recarrega a página para refletir mudanças de status
+    location.reload();
+  } catch(e) {}
+}
+setInterval(refreshFila, 30000);
+</script>
+</body>
+</html>
