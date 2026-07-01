@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Configurações — DentaAgenda{% endblock %}
+{% block content %}
+<div class="section-head">
+  <h2>Configurações</h2>
+</div>
+
+<div style="background:var(--white);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);max-width:580px">
+  <h3 style="font-family:'DM Serif Display',serif;color:var(--teal-dk);font-size:1rem;margin-bottom:6px">Mensagem do WhatsApp</h3>
+  <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">
+    Personalize o lembrete enviado aos pacientes. Use as variáveis abaixo para inserir dados automáticos:
+  </p>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+    <span onclick="inserirVar('{nome}')"     style="cursor:pointer;background:var(--mint);color:var(--teal-dk);padding:4px 10px;border-radius:20px;font-size:.78rem;font-weight:600">{nome}</span>
+    <span onclick="inserirVar('{data}')"     style="cursor:pointer;background:var(--mint);color:var(--teal-dk);padding:4px 10px;border-radius:20px;font-size:.78rem;font-weight:600">{data}</span>
+    <span onclick="inserirVar('{hora}')"     style="cursor:pointer;background:var(--mint);color:var(--teal-dk);padding:4px 10px;border-radius:20px;font-size:.78rem;font-weight:600">{hora}</span>
+    <span onclick="inserirVar('{procedimento}')" style="cursor:pointer;background:var(--mint);color:var(--teal-dk);padding:4px 10px;border-radius:20px;font-size:.78rem;font-weight:600">{procedimento}</span>
+  </div>
+  <p style="font-size:.75rem;color:var(--muted);margin-bottom:16px">Clique nas variáveis acima para inserir no texto.</p>
+
+  <form method="POST">
+    <div class="form-group">
+      <label>Mensagem</label>
+      <textarea name="msg_whatsapp" id="msg-input" rows="5" placeholder="Ex: Ola {nome}! Sua consulta e dia {data} as {hora}.">{{ clinica.msg_whatsapp or '' }}</textarea>
+    </div>
+
+    <!-- Preview -->
+    <div style="background:var(--cream);border-radius:8px;padding:14px;margin-bottom:16px">
+      <div style="font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Preview</div>
+      <div id="preview" style="font-size:.88rem;color:var(--ink);white-space:pre-wrap;line-height:1.6"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button type="button" class="btn btn-secondary" onclick="resetar()">Resetar padrão</button>
+      <button type="submit" class="btn btn-primary">Salvar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const EXEMPLO = {
+  nome: 'Maria',
+  data: '15/07/2026',
+  hora: '09:00',
+  procedimento: 'Limpeza'
+};
+
+function atualizarPreview() {
+  let msg = document.getElementById('msg-input').value;
+  msg = msg.replace(/{nome}/g, EXEMPLO.nome)
+           .replace(/{data}/g, EXEMPLO.data)
+           .replace(/{hora}/g, EXEMPLO.hora)
+           .replace(/{procedimento}/g, EXEMPLO.procedimento);
+  document.getElementById('preview').textContent = msg;
+}
+
+function inserirVar(v) {
+  const el = document.getElementById('msg-input');
+  const pos = el.selectionStart;
+  el.value = el.value.slice(0, pos) + v + el.value.slice(pos);
+  el.focus();
+  el.setSelectionRange(pos + v.length, pos + v.length);
+  atualizarPreview();
+}
+
+function resetar() {
+  document.getElementById('msg-input').value = 'Ola {nome}! Lembrando sua consulta no dia {data} as {hora}. Procedimento: {procedimento}. Ate la!';
+  atualizarPreview();
+}
+
+document.getElementById('msg-input').addEventListener('input', atualizarPreview);
+atualizarPreview();
+</script>
+{% endblock %}

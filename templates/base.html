@@ -134,6 +134,7 @@ main{max-width:960px;margin:0 auto;padding:20px}
     <a class="nav-link {% if request.endpoint=='consultas' %}active{% endif %}" href="{{ url_for('consultas') }}">📋 Consultas</a>
     <a class="nav-link {% if request.endpoint=='pacientes' %}active{% endif %}" href="{{ url_for('pacientes') }}">👤 Pacientes</a>
     <a class="nav-link" href="{{ url_for('tv', slug=current_user.clinica.slug) }}" target="_blank">📺 TV</a>
+    <a class="nav-link {% if request.endpoint=='configuracoes' %}active{% endif %}" href="{{ url_for('configuracoes') }}">⚙️ Config</a>
   </nav>
   <div class="user-info">
     <span>{{ current_user.nome.split()[0] }}</span>

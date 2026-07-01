@@ -119,14 +119,16 @@ def wa_link(telefone, mensagem):
     return f'https://wa.me/{n}?text={quote(mensagem)}'
 
 def build_wa_msg(paciente, consulta):
+    from sqlalchemy.orm import object_session
+    clinica = consulta.clinica
+    template = (clinica.msg_whatsapp or
+        'Ola {nome}! Lembrando sua consulta no dia {data} as {hora}. Procedimento: {procedimento}. Ate la!')
     d = consulta.data.strftime('%d/%m/%Y')
-    primeiro_nome = paciente.nome.split()[0]
-    proc = f'\nProcedimento: {consulta.procedimento}' if consulta.procedimento else ''
-    return (
-        f'Olá {primeiro_nome}! 😊\n'
-        f'Lembrando sua consulta no dia *{d}* às *{consulta.hora}*.{proc}\n'
-        f'Até lá! 🦷'
-    )
+    msg = template.replace('{nome}', paciente.nome.split()[0])
+    msg = msg.replace('{data}', d)
+    msg = msg.replace('{hora}', consulta.hora)
+    msg = msg.replace('{procedimento}', consulta.procedimento or '')
+    return msg
 
 
 # ─────────────────────────────────────────────
@@ -425,6 +427,22 @@ def setup():
 # ─────────────────────────────────────────────
 # INIT DB
 # ─────────────────────────────────────────────
+
+
+# ─────────────────────────────────────────────
+# CONFIGURAÇÕES
+# ─────────────────────────────────────────────
+
+@app.route('/configuracoes', methods=['GET','POST'])
+@login_required
+def configuracoes():
+    clinica = current_user.clinica
+    if request.method == 'POST':
+        clinica.msg_whatsapp = request.form.get('msg_whatsapp', '').strip()
+        db.session.commit()
+        flash('Configuracoes salvas!', 'ok')
+        return redirect(url_for('configuracoes'))
+    return render_template('configuracoes.html', clinica=clinica)
 
 if __name__ == '__main__':
     with app.app_context():
